@@ -1,0 +1,25 @@
+1. get models directory or file
+2. Flags
+- -da:EF.dbContextClassName || -da:Dapper || -da:Ado
+- -db:SQLS || -db:SQLL
+- -dl:Repostory || -dl:Controller 
+- -services
+- -user:className/auth:jwt/authorization:User,Admin
+- -caching
+
+ex: /Models -da:EF.ProductsContext -db:SQLS -dl:Repository -services -user:User.auth:jwt/authorization:User,Admin -caching
+
+3. Generate
+- Directories: Repositories? Services? Controllers Data
+- Files: Foreach directory, create file with each model name prepended with the directory name
+- If EF, create DbContext file
+- If not, create DataAccess file
+- In Repositories, Services, Controllers -> create generic interface and extend it to created files in that directory
+- if auth, locate Program file and add middleware
+- If auth but no ef create Store directory and file for user
+
+Classes effected by Auth:
+- User model
+- Program
+- csproj
+- if EF -> dbContext

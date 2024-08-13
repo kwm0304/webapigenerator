@@ -50,11 +50,19 @@
               "target": "Package",
               "version": "[4.10.0, )"
             },
+            "Microsoft.CodeAnalysis.CSharp.Workspaces": {
+              "target": "Package",
+              "version": "[4.10.0, )"
+            },
             "Microsoft.CodeAnalysis.Workspaces.Common": {
               "target": "Package",
               "version": "[4.10.0, )"
             },
             "Spectre.Console": {
+              "target": "Package",
+              "version": "[0.49.1, )"
+            },
+            "Spectre.Console.Cli": {
               "target": "Package",
               "version": "[0.49.1, )"
             }
