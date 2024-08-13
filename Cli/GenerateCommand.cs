@@ -22,8 +22,21 @@ public class GenerateCommand(WriteDirectories writer, ProjectReader reader, Inst
   }
   public async Task GenerateCodeAsync(GenerateSettings settings)
   {
+    Project project = LoadProjectAndExtractTools(settings);
+    await InstallRequiredPackages(project);
+    await CreateDirectoriesAndFiles(settings);
+    await ConfigureAdditionalSettings(settings);
+  }
+
+  private Project LoadProjectAndExtractTools(GenerateSettings settings)
+  {
     Project project = _reader.LoadCodeAnalysisProject();
     _tools = _installer.ExtractCommandTools(settings);
+    return project;
+  }
+
+  private async Task InstallRequiredPackages(Project project)
+  {
     List<string> packageNames = await GetRequirements();
     List<string> currentPackageNames = await _reader.GetPackageReferencesAsync(project);
     if (packageNames != null)
@@ -37,17 +50,17 @@ public class GenerateCommand(WriteDirectories writer, ProjectReader reader, Inst
       }
       await _installer.RestoreTools();
     }
+  }
+
+  private async Task CreateDirectoriesAndFiles(GenerateSettings settings)
+  {
     var modelsPath = settings.ModelsPath;
     var dataAccess = settings.DataAccess;
     var dataLayer = settings.DataLayer;
     var includeServices = settings.IncludeServices;
-    var user = settings.User;
-    var enableCaching = settings.EnableCaching;
-    withEF = dataAccess!.StartsWith("EF");
-
+    bool withEF = dataAccess!.StartsWith("EF");
     await _writer.CreateDirectoriesAsync(dataLayer, includeServices);
     await _writer.CreateFilesAsync(modelsPath, dataLayer, includeServices, withEF);
-
     if (withEF)
     {
       await _writer.CreateDbContextFileAsync(dataAccess);
@@ -56,7 +69,13 @@ public class GenerateCommand(WriteDirectories writer, ProjectReader reader, Inst
     {
       await _writer.CreateDataAccessFileAsync();
     }
-    await _writer.CreateInterfacesAsync(dataLayer, includeServices);
+  }
+
+  private async Task ConfigureAdditionalSettings(GenerateSettings settings)
+  {
+    var user = settings.User;
+    var enableCaching = settings.EnableCaching;
+    bool withEF = settings.DataAccess!.StartsWith("EF");
     if (!string.IsNullOrEmpty(user))
     {
       await _writer.AddAuthMiddlewareAsync(user);
