@@ -1,3 +1,4 @@
+using Microsoft.CodeAnalysis;
 using Spectre.Console.Cli;
 using webapigenerator.Enums;
 using webapigenerator.Readers;
@@ -21,13 +22,18 @@ public class GenerateCommand(WriteDirectories writer, ProjectReader reader, Inst
   }
   public async Task GenerateCodeAsync(GenerateSettings settings)
   {
+    Project project = _reader.LoadCodeAnalysisProject();
     _tools = _installer.ExtractCommandTools(settings);
     List<string> packageNames = await GetRequirements();
+    List<string> currentPackageNames = await _reader.GetPackageReferencesAsync(project);
     if (packageNames != null)
     {
       foreach (var name in packageNames)
       {
-        await _installer.InstallTool(name);
+        if (!currentPackageNames.Contains(name))
+        {
+          await _installer.InstallTool(name);
+        }
       }
       await _installer.RestoreTools();
     }
