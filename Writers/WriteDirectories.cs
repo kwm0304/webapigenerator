@@ -3,6 +3,7 @@ using webapigenerator.Builders;
 using webapigenerator.Cli;
 using webapigenerator.Enums;
 using webapigenerator.Readers;
+using webapigenerator.Templates;
 using webapigenerator.Utils;
 
 namespace webapigenerator.Writers;
@@ -10,13 +11,15 @@ namespace webapigenerator.Writers;
 public class WriteDirectories
 {
     private readonly MiddlewareBuilder _middlewareBuilder;
+    private readonly FileWriter _writer;
 
-    public WriteDirectories(MiddlewareBuilder middlewareBuilder)
+    public WriteDirectories(MiddlewareBuilder middlewareBuilder, FileWriter writer)
     {
         _middlewareBuilder = middlewareBuilder;
+        _writer = writer;
     }
 
-    public async Task CreateDirectoriesAndFiles(GenerateSettings settings, Project project, ProjectMetadata? projectMetadata, List<ProjectTools> tools)
+    public async Task CreateDirectoriesAndFiles(GenerateSettings settings, Project project, ProjectMetadata? projectMetadata, List<ProjectTools> tools, string? projectName)
     {
         var modelsPath = settings.ModelsPath;
         var dataAccess = settings.DataAccess;
@@ -27,6 +30,7 @@ public class WriteDirectories
         bool withEF = dataAccess!.StartsWith("EF");
         // IEnumerable<string> classNames = projectMetadata!.GetAllClassNames();
         await CreateDirectoriesAsync(includeServices, project);
+        await CreateStaticFiles(projectName, includeServices);
         List<PathName> newClassPaths = await CreateFilesAsync(modelsPath, includeServices);
 
         if (withEF)
@@ -47,7 +51,6 @@ public class WriteDirectories
         }
         if (!string.IsNullOrEmpty(user))
         {
-
             if (!withEF)
             {
                 await CreateUserStoreAsync();
@@ -58,6 +61,25 @@ public class WriteDirectories
             await ConfigureCachingAsync();
         }
     }
+
+    private async Task CreateStaticFiles(string? projectName, bool withServices)
+    {
+
+        PathName repositoryPath = new(projectName, "Repositories", "Repository.cs");
+        ClassBuilder repositoryClass = BaseRepositoryTemplate.CreateBaseRepository(repositoryPath, "AppDbContext", projectName);
+        string repositoryString = repositoryClass.ToString();
+        await _writer.WriteToFile(repositoryPath, repositoryString);
+        PathName servicePath = new(projectName!, "Services", "Service.cs");
+        ClassBuilder serviceClass = BaseServiceTemplate.CreateBaseService(servicePath, projectName);
+        string serviceString = serviceClass.ToString();
+        await _writer.WriteToFile(servicePath, serviceString);
+        PathName controllerPath = new(projectName!, "Controllers", "Controller");
+        string calling = withServices ? "IServices" : "IRepository";
+        ControllerBuilder controllerClass = BaseControllerTemplate.CreateBaseController(controllerPath, calling, projectName);
+        string controllerString = controllerClass.ToString();
+        await _writer.WriteToFile(controllerPath, controllerString);
+    }
+
     public void CreateDirectoryIfNotExists()
     {
 

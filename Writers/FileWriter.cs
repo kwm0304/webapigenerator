@@ -6,11 +6,11 @@ namespace webapigenerator;
 
 public class FileWriter
 {
-  public void WriteToFile(PathName pathName, string code)
+  public async Task WriteToFile(PathName pathName, string code)
   {
     pathName.EnsureDirectoryExists();
     var formatted = FormatCode(code);
-    File.WriteAllText(pathName.GetFilePath(), formatted);
+    await File.WriteAllTextAsync(pathName.GetFilePath(), formatted);
   }
 
   private string FormatCode(string code)

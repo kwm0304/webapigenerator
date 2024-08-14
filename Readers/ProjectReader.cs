@@ -75,16 +75,4 @@ public class ProjectReader
     }
     return packages;
   }
-
-  internal async Task<List<string>> ExtractTools(GenerateSettings settings)
-  {
-    //will normalize the names
-    throw new NotImplementedException();
-  }
-
-  internal async Task<List<ProjectTools>> ReadCsProj()
-  {
-    // will parse cs proj for the string after include foreach project reference line
-    throw new NotImplementedException();
-  }
 }

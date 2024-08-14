@@ -12,7 +12,6 @@ public class BaseControllerTemplate
   public static ControllerBuilder CreateBaseController(PathName pathName, string dataAccess, string projectName)
   {
     string[] args = ["IService<T> service"];
-    string[] annotations = ["HttpGet"];
     string dataType = dataAccess == "Service" ? "IService<T>" : "IRepository<T>";
     string dataTypeShort = dataAccess.ToLower();
     string dataTypeUnderscore = "_" + dataTypeShort;
@@ -21,7 +20,7 @@ public class BaseControllerTemplate
     builder.AddField("private readonly", dataType, "_service", null);
     builder.AddConstructor(publicStr, args, $"{dataTypeUnderscore} = {dataTypeShort};");
     //get all
-    builder.AddMethod(publicAsync, iActionResult, "GetAllAsync", annotations, "", 
+    builder.AddMethod(publicAsync, iActionResult, "GetAllAsync", ["HttpGet"], "", 
     tryStart + $"var entities = await {dataTypeUnderscore}.GetAllAsync();\nreturn Ok(entities);\n}}" + catchBlock);
     //getbyid
     builder.AddMethod(publicAsync, iActionResult, "GetById", ["HttpGet(\"id\")"], "int id",

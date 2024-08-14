@@ -14,6 +14,7 @@ public class GenerateCommand(WriteDirectories writer, ProjectReader reader, Inst
   private readonly InstallTools _installer = installer;
   private readonly ProjectLocator _locator = locator;
   private ProjectMetadata? _projectMetadata;
+  private string? _projectName;
   public List<ProjectTools> _tools = [];
   public bool withEF = false;
 
@@ -26,9 +27,10 @@ public class GenerateCommand(WriteDirectories writer, ProjectReader reader, Inst
   {
     string modelDir = settings.ModelsPath!;
     Project project = LoadProjectAndExtractTools(settings);
+    _projectName = project.Name;
     _projectMetadata = new(project);
     await InstallRequiredPackages(project, modelDir);
-    await _writer.CreateDirectoriesAndFiles(settings, project, _projectMetadata, _tools);
+    await _writer.CreateDirectoriesAndFiles(settings, project, _projectMetadata, _tools, _projectName);
   }
 
   private Project LoadProjectAndExtractTools(GenerateSettings settings)
