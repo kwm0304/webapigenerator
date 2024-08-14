@@ -35,7 +35,7 @@ public abstract class TypeBuilderBase(string name, PathName? pathName)
       _builder.AppendLine($"namespace {_pathName.SubDirectoryName}");
       _builder.AppendLine("{");
     }
-    BuildType();
+    BuildType(inherits: true);
     if (_pathName != null && !string.IsNullOrEmpty(_pathName.SubDirectoryName))
     {
       _builder.AppendLine("}");
@@ -43,5 +43,5 @@ public abstract class TypeBuilderBase(string name, PathName? pathName)
     return _builder.ToString();
   }
 
-  protected abstract void BuildType();
+  protected abstract void BuildType(bool inherits);
 }

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Owner\\Desktop\\webapigenerator\\webapigenerator.csproj": {}
+    "C:\\Users\\Owner\\Desktop\\repos\\webapigenerator\\webapigenerator.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Owner\\Desktop\\webapigenerator\\webapigenerator.csproj": {
+    "C:\\Users\\Owner\\Desktop\\repos\\webapigenerator\\webapigenerator.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Owner\\Desktop\\webapigenerator\\webapigenerator.csproj",
+        "projectUniqueName": "C:\\Users\\Owner\\Desktop\\repos\\webapigenerator\\webapigenerator.csproj",
         "projectName": "webapigenerator",
-        "projectPath": "C:\\Users\\Owner\\Desktop\\webapigenerator\\webapigenerator.csproj",
+        "projectPath": "C:\\Users\\Owner\\Desktop\\repos\\webapigenerator\\webapigenerator.csproj",
         "packagesPath": "C:\\Users\\Owner\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Owner\\Desktop\\webapigenerator\\obj\\",
+        "outputPath": "C:\\Users\\Owner\\Desktop\\repos\\webapigenerator\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Owner\\AppData\\Roaming\\NuGet\\NuGet.Config",

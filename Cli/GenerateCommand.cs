@@ -7,11 +7,13 @@ using webapigenerator.Writers;
 
 namespace webapigenerator.Cli;
 
-public class GenerateCommand(WriteDirectories writer, ProjectReader reader, InstallTools installer) : AsyncCommand<GenerateSettings>
+public class GenerateCommand(WriteDirectories writer, ProjectReader reader, InstallTools installer, ProjectLocator locator) : AsyncCommand<GenerateSettings>
 {
   private readonly WriteDirectories _writer = writer;
   private readonly ProjectReader _reader = reader;
   private readonly InstallTools _installer = installer;
+  private readonly ProjectLocator _locator = locator;
+  private ProjectMetadata? _projectMetadata;
   public List<ProjectTools> _tools = [];
   public bool withEF = false;
 
@@ -22,10 +24,11 @@ public class GenerateCommand(WriteDirectories writer, ProjectReader reader, Inst
   }
   public async Task GenerateCodeAsync(GenerateSettings settings)
   {
+    string modelDir = settings.ModelsPath!;
     Project project = LoadProjectAndExtractTools(settings);
-    await InstallRequiredPackages(project);
-    await CreateDirectoriesAndFiles(settings);
-    await ConfigureAdditionalSettings(settings);
+    _projectMetadata = new(project);
+    await InstallRequiredPackages(project, modelDir);
+    await _writer.CreateDirectoriesAndFiles(settings, project, _projectMetadata, _tools);
   }
 
   private Project LoadProjectAndExtractTools(GenerateSettings settings)
@@ -35,9 +38,9 @@ public class GenerateCommand(WriteDirectories writer, ProjectReader reader, Inst
     return project;
   }
 
-  private async Task InstallRequiredPackages(Project project)
+  private async Task InstallRequiredPackages(Project project, string modelDir)
   {
-    List<string> packageNames = await GetRequirements();
+    List<string> packageNames = await GetRequirements(modelDir);
     List<string> currentPackageNames = await _reader.GetPackageReferencesAsync(project);
     if (packageNames != null)
     {
@@ -52,56 +55,23 @@ public class GenerateCommand(WriteDirectories writer, ProjectReader reader, Inst
     }
   }
 
-  private async Task CreateDirectoriesAndFiles(GenerateSettings settings)
-  {
-    var modelsPath = settings.ModelsPath;
-    var dataAccess = settings.DataAccess;
-    var dataLayer = settings.DataLayer;
-    var includeServices = settings.IncludeServices;
-    bool withEF = dataAccess!.StartsWith("EF");
-    await _writer.CreateDirectoriesAsync(dataLayer, includeServices);
-    await _writer.CreateFilesAsync(modelsPath, dataLayer, includeServices, withEF);
-    if (withEF)
-    {
-      await _writer.CreateDbContextFileAsync(dataAccess);
-    }
-    else
-    {
-      await _writer.CreateDataAccessFileAsync();
-    }
-  }
+  
 
-  private async Task ConfigureAdditionalSettings(GenerateSettings settings)
-  {
-    var user = settings.User;
-    var enableCaching = settings.EnableCaching;
-    bool withEF = settings.DataAccess!.StartsWith("EF");
-    if (!string.IsNullOrEmpty(user))
-    {
-      await _writer.AddAuthMiddlewareAsync(user);
-      if (!withEF)
-      {
-        await _writer.CreateUserStoreAsync();
-      }
-    }
-    if (enableCaching)
-    {
-      await _writer.ConfigureCachingAsync();
-    }
-  }
+  
 
-  public async Task<List<string>> GetRequirements()
+  public async Task<List<string>> GetRequirements(string modelDir)
   {
     List<string> packageNames = [];
     List<ProjectTools> toolsNeeded = [];
-    List<ProjectTools> currentTools = await _reader.ReadCsProj();
-    foreach (var tool in currentTools)
-    {
-      if (!_tools.Contains(tool))
-      {
-        toolsNeeded.Add(tool);
-      }
-    }
+    string csProjFile = _locator.LocateCsProj(modelDir)!;
+    List<string> currentTools = _projectMetadata!.GetNugetPackages(csProjFile);
+    // foreach (var tool in currentTools)
+    // {
+    //   if (!_tools.Contains(tool))
+    //   {
+    //     toolsNeeded.Add(tool);
+    //   }
+    // }
     if (toolsNeeded != null)
     {
       foreach (var tool in toolsNeeded)

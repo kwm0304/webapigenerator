@@ -27,7 +27,7 @@ public class ProjectReader
 
     return workspace.AddProject(projectInfo);
   }
-  private IEnumerable<string> GetFilesFromDirectory(string directoryPath)
+  public static IEnumerable<string> GetFilesFromDirectory(string directoryPath)
     {
         return Directory.GetFiles(directoryPath, "*.cs", SearchOption.AllDirectories);
     }
