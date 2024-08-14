@@ -4,7 +4,7 @@ namespace webapigenerator.Templates;
 
 public class BaseRepositoryTemplate
 {
-    public InterfaceBuilder CreateBaseIRepository(PathName pathName)
+    public static InterfaceBuilder CreateBaseIRepository(PathName pathName)
     {
       InterfaceBuilder builder = new("IRepository<T> where T", pathName, "class");
       builder.AddMethod("Task<List<T>>", "GetAllAsync","");
@@ -14,10 +14,12 @@ public class BaseRepositoryTemplate
       builder.AddMethod("Task", "DeleteByIdAsync", "int id");
       return builder;
     }
-    public ClassBuilder CreateBaseRepository(PathName pathName, string dbContextName)
+    public static ClassBuilder CreateBaseRepository(PathName pathName, string dbContextName, string projectName)
     {
       string[] args = [$"{dbContextName} context"];
       ClassBuilder builder = new("Repository", pathName, "IRepository<T> where T : class");
+      builder.AddUsing($"{projectName}.Data;");
+      builder.AddUsing("Microsoft.EntityFrameworkCore;");
       builder.AddField("private readonly", dbContextName, "_context", null);
       builder.AddField("private readonly", "DbSet<T>", "_dbSet", null);
       builder.AddConstructor("public", args, "_context = context;");

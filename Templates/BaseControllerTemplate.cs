@@ -4,32 +4,40 @@ namespace webapigenerator.Templates;
 
 public class BaseControllerTemplate
 {
-  public static string publicStr = "public";
-  public static string publicAsync = "public async";
-  public static string taskStr = "Task";
-
-  public InterfaceBuilder CreateBaseIService(PathName pathName)
+  private readonly static string publicStr = "public";
+  private readonly static string publicAsync = "public async";
+  private readonly static string iActionResult = "Task<IActionResult>";
+  private readonly static string catchBlock = "\ncatch (Exception e)\n{\nConsole.WriteLine($\"Error: {e.Message}\");\nreturn BadRequest(e.Message);\n";
+  private readonly static string tryStart = "try\n{\n";
+  public static ControllerBuilder CreateBaseController(PathName pathName, string dataAccess, string projectName)
   {
-    InterfaceBuilder builder = new("IService<T> where T", pathName, "class");
-    builder.AddMethod(taskStr + "<List<T>>", "GetAllAsync", "");
-    builder.AddMethod(taskStr + "<T>", "GetByIdAsync", "int id");
-    builder.AddMethod(taskStr + "<T>", "CreateAsync", "T entity");
-    builder.AddMethod(taskStr, "UpdateAsync", "T entity");
-    builder.AddMethod(taskStr, "DeleteByIdAsync", "int id");
-    return builder;
-  }
-  public ClassBuilder CreateBaseService(PathName pathName)
-  {
-    string[] args = ["IRepository<T> repository"];
-    ClassBuilder builder = new("Service<T>", pathName, "IService<T> where T : class");
-    builder.AddField("private readonly", "IRepository<T>", "_repository", null);
-    builder.AddConstructor(publicStr, args, "_repository = repository;");
-    builder.AddMethod(publicAsync, $"{taskStr}<T>", "CreateAsync", "T entity", "await _repository.CreateAsync(entity);\nreturn entity;");
-    builder.AddMethod(publicAsync, taskStr, "DeleteByIdAsync", "int id",
-    "await _repository.DeleteByIdAsync(id);");
-    builder.AddMethod(publicAsync, taskStr + "<List<T>>", "GetAllAsync", "return await _repository.GetAllAsync();");
-    builder.AddMethod(publicAsync, taskStr + "<T>", "GetByIdAsync", "int id", "return await _repository.GetByIdAsync(id);");
-    builder.AddMethod(publicAsync, taskStr, "UpdateAsync", "T entity", "await _repository.UpdateAsync(entity);");
+    string[] args = ["IService<T> service"];
+    string[] annotations = ["HttpGet"];
+    string dataType = dataAccess == "Service" ? "IService<T>" : "IRepository<T>";
+    string dataTypeShort = dataAccess.ToLower();
+    string dataTypeUnderscore = "_" + dataTypeShort;
+    ControllerBuilder builder = new("Controller<T>", pathName);
+    builder.AddUsing($"{projectName}.{dataAccess};");
+    builder.AddField("private readonly", dataType, "_service", null);
+    builder.AddConstructor(publicStr, args, $"{dataTypeUnderscore} = {dataTypeShort};");
+    //get all
+    builder.AddMethod(publicAsync, iActionResult, "GetAllAsync", annotations, "", 
+    tryStart + $"var entities = await {dataTypeUnderscore}.GetAllAsync();\nreturn Ok(entities);\n}}" + catchBlock);
+    //getbyid
+    builder.AddMethod(publicAsync, iActionResult, "GetById", ["HttpGet(\"id\")"], "int id",
+    tryStart + $"var entity = await {dataTypeUnderscore}.GetByIdAsync(id);\nif (entity == null)\n{{\nreturn NotFound(\"Nothing found with this id\");\n}}\nreturn Ok(entity);\n}}" + catchBlock);
+    //create
+    builder.AddMethod(publicAsync, iActionResult, "CreateAsync", ["HttpPost"], "[FromBody]T entity",
+    "if (entity == null)\n{\nreturn BadRequest(\"Entity cannot be null\");\n}\n" + tryStart + 
+    $"var created = await {dataTypeUnderscore}.CreateAsync(entity);\nreturn Ok(created);\n}}" + catchBlock);
+    //update
+    builder.AddMethod(publicAsync, iActionResult, "UpdateAsync", ["HttpPut"],"[FromBody]T entity",
+    "if (entity == null)\n{\nreturn BadRequest(\"Entity cannot be null\");\n}\n" + tryStart +
+    $"var updated = await {dataTypeUnderscore}.UpdateAsync(entity);\nif (entity == null)\n{{\nreturn BadRequest(\"Entity cannot be null\");\n}}" +
+    "return Ok(entity);\n}" + catchBlock);
+    //delete
+    builder.AddMethod(publicAsync, iActionResult, "DeleteByIdAsync", ["HttpDelete(\"{id}\")"], "int id",
+    tryStart + $"await {dataTypeUnderscore}.DeleteByIdAsync(id);\nreturn Ok(\"Deleted successfully\");\n}}" + catchBlock);
     return builder;
   }
 }
