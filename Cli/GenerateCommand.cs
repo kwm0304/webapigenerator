@@ -55,10 +55,6 @@ public class GenerateCommand(WriteDirectories writer, ProjectReader reader, Inst
     }
   }
 
-  
-
-  
-
   public async Task<List<string>> GetRequirements(string modelDir)
   {
     List<string> packageNames = [];

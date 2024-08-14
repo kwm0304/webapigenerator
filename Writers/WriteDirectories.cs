@@ -28,7 +28,7 @@ public class WriteDirectories
         // IEnumerable<string> classNames = projectMetadata!.GetAllClassNames();
         await CreateDirectoriesAsync(includeServices, project);
         List<PathName> newClassPaths = await CreateFilesAsync(modelsPath, includeServices);
-        
+
         if (withEF)
         {
             if (string.IsNullOrEmpty(user))
