@@ -8,7 +8,7 @@ public class BaseServiceTemplate
   private readonly static string publicAsync = "public async";
   private readonly static string taskStr = "Task";
 
-  public static InterfaceBuilder CreateBaseIService(PathName pathName)
+  public static string CreateBaseIService(PathName pathName)
   {
     InterfaceBuilder builder = new("IService<T> where T", pathName, "class");
     builder.AddMethod(taskStr + "<List<T>>", "GetAllAsync", "");
@@ -16,9 +16,9 @@ public class BaseServiceTemplate
     builder.AddMethod(taskStr + "<T>", "CreateAsync", "T entity");
     builder.AddMethod(taskStr, "UpdateAsync", "T entity");
     builder.AddMethod(taskStr, "DeleteByIdAsync", "int id");
-    return builder;
+    return builder.ToString();
   }
-  public static ClassBuilder CreateBaseService(PathName pathName, string projectName)
+  public static string CreateBaseService(PathName pathName, string projectName)
   {
     string[] args = ["IRepository<T> repository"];
     ClassBuilder builder = new("Service<T>", pathName, "IService<T> where T : class");
@@ -31,6 +31,6 @@ public class BaseServiceTemplate
     builder.AddMethod(publicAsync, taskStr + "<List<T>>", "GetAllAsync", "return await _repository.GetAllAsync();");
     builder.AddMethod(publicAsync, taskStr + "<T>", "GetByIdAsync", "int id", "return await _repository.GetByIdAsync(id);");
     builder.AddMethod(publicAsync, taskStr, "UpdateAsync", "T entity", "await _repository.UpdateAsync(entity);");
-    return builder;
+    return builder.ToString();
   }
 }

@@ -24,7 +24,10 @@ public class ClassBuilder(string className, PathName? pathName, string? baseClas
     _fields.Add(field);
   }
 
-
+  public void AddProperty(string accessibility, string type, string name, string accessors)
+  {
+    _properties.Add($"{accessibility} {type} {name} {{ {accessors} }}");
+  }
   public void AddConstructor(string accessibility, string[] parameters, string constructorBody)
   {
     var constructor = new StringBuilder();

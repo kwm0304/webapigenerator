@@ -28,7 +28,6 @@ public class WriteDirectories
         var user = settings.User;
         var enableCaching = settings.EnableCaching;
         bool withEF = dataAccess!.StartsWith("EF");
-        // IEnumerable<string> classNames = projectMetadata!.GetAllClassNames();
         await CreateDirectoriesAsync(includeServices, project);
         await CreateStaticFiles(projectName, includeServices);
         List<PathName> newClassPaths = await CreateFilesAsync(modelsPath, includeServices);
@@ -64,26 +63,24 @@ public class WriteDirectories
 
     private async Task CreateStaticFiles(string? projectName, bool withServices)
     {
-
-        PathName repositoryPath = new(projectName, "Repositories", "Repository.cs");
-        ClassBuilder repositoryClass = BaseRepositoryTemplate.CreateBaseRepository(repositoryPath, "AppDbContext", projectName);
-        string repositoryString = repositoryClass.ToString();
-        await _writer.WriteToFile(repositoryPath, repositoryString);
-        PathName servicePath = new(projectName!, "Services", "Service.cs");
-        ClassBuilder serviceClass = BaseServiceTemplate.CreateBaseService(servicePath, projectName);
-        string serviceString = serviceClass.ToString();
-        await _writer.WriteToFile(servicePath, serviceString);
-        PathName controllerPath = new(projectName!, "Controllers", "Controller");
-        string calling = withServices ? "IServices" : "IRepository";
-        ControllerBuilder controllerClass = BaseControllerTemplate.CreateBaseController(controllerPath, calling, projectName);
-        string controllerString = controllerClass.ToString();
-        await _writer.WriteToFile(controllerPath, controllerString);
-    }
-
-    public void CreateDirectoryIfNotExists()
+        if (string.IsNullOrEmpty(projectName))
+            throw new ArgumentNullException(nameof(projectName));
+        var tasks = new List<Task>
     {
-
+        CreateFile("Repositories", "Repository.cs", path => BaseRepositoryTemplate.CreateBaseRepository(path, "AppDbContext", projectName)),
+        CreateFile("Services", "Service.cs", path => BaseServiceTemplate.CreateBaseService(path, projectName)),
+        CreateFile("Controllers", "Controller", path => BaseControllerTemplate.CreateBaseController(path, withServices ? "IServices" : "IRepository", projectName))
+    };
+        await Task.WhenAll(tasks);
+        Task CreateFile(string folder, string fileName, Func<PathName, string> createTemplate)
+        {
+            var path = new PathName(projectName, folder, fileName);
+            return _writer.WriteToFile(path, createTemplate(path));
+        }
     }
+
+
+
     public async Task AddAuthMiddlewareAsync(string user, List<ProjectTools> tools)//,  List<string> existingMiddlewareServices
     {
         List<string> linesToAdd = [];
@@ -198,5 +195,4 @@ public class WriteDirectories
     {
         throw new NotImplementedException();
     }
-
 }

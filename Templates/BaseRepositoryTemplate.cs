@@ -4,7 +4,7 @@ namespace webapigenerator.Templates;
 
 public class BaseRepositoryTemplate
 {
-    public static InterfaceBuilder CreateBaseIRepository(PathName pathName)
+    public static string CreateBaseIRepository(PathName pathName)
     {
       InterfaceBuilder builder = new("IRepository<T> where T", pathName, "class");
       builder.AddMethod("Task<List<T>>", "GetAllAsync","");
@@ -12,9 +12,9 @@ public class BaseRepositoryTemplate
       builder.AddMethod("Task<T>", "CreateAsync", "T entity");
       builder.AddMethod("Task", "UpdateAsync", "T entity");
       builder.AddMethod("Task", "DeleteByIdAsync", "int id");
-      return builder;
+      return builder.ToString();
     }
-    public static ClassBuilder CreateBaseRepository(PathName pathName, string dbContextName, string projectName)
+    public static string CreateBaseRepository(PathName pathName, string dbContextName, string projectName)
     {
       string[] args = [$"{dbContextName} context"];
       ClassBuilder builder = new("Repository", pathName, "IRepository<T> where T : class");
@@ -29,6 +29,6 @@ public class BaseRepositoryTemplate
       builder.AddMethod("public", "async Task", "UpdateAsync", "T entity", "_context.Entry(entity).State = EntityState.Modified;\nawait _context.SaveChangesAsync();");
       builder.AddMethod("public", "async Task", "DeleteByIdAsync", "int id", 
       "var entity = await _dbSet.FindAsync(id);\nif (entity != null)\n{\n_dbSet.Remove(entity);\nawait _context.SaveChangesAsync();\n");
-      return builder;
+      return builder.ToString();
     }
 }
