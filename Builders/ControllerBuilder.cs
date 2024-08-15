@@ -2,20 +2,14 @@ using System.Text;
 
 namespace webapigenerator.Builders;
 
-public class ControllerBuilder : TypeBuilderBase
+public class ControllerBuilder(string className, PathName? pathName, string? baseClassName = "ControllerBase") : TypeBuilderBase(className, pathName)
 {
   private readonly List<string> _fields = new();
   private readonly List<string> _methods = new();
   private readonly List<string> _constructors = new();
-  private readonly string? _baseClassName;
+  private readonly string? _baseClassName = baseClassName;
 
-  public ControllerBuilder(string className, PathName? pathName, string? baseClassName = "ControllerBase")
-      : base(className, pathName)
-  {
-    _baseClassName = baseClassName;
-  }
-
-  public void AddField(string accessibility, string type, string name, string? initialValue)
+    public void AddField(string accessibility, string type, string name, string? initialValue)
   {
     var field = $"{accessibility} {type} {name}";
     if (initialValue != null)

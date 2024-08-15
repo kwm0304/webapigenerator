@@ -5,7 +5,7 @@ namespace webapigenerator.Templates;
 public class AppDbContext
 {
   private static readonly string publicStr = "public";
-  public static string CreateBaseDbContext(PathName pathName, string projectName, List<string> entities)
+  public static string CreateBaseDbContext(PathName pathName, string projectName, IEnumerable<string> entities)
   {
     ClassBuilder builder = new("AppDbContext", pathName, "DbContext");
     builder.AddUsing("Microsoft.EntityFrameworkCore");

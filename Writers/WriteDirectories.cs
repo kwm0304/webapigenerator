@@ -13,6 +13,7 @@ public class WriteDirectories
     private readonly MiddlewareBuilder _middlewareBuilder;
     private readonly FileWriter _writer;
 
+
     public WriteDirectories(MiddlewareBuilder middlewareBuilder, FileWriter writer)
     {
         _middlewareBuilder = middlewareBuilder;
@@ -29,7 +30,7 @@ public class WriteDirectories
         var enableCaching = settings.EnableCaching;
         bool withEF = dataAccess!.StartsWith("EF");
         await CreateDirectoriesAsync(includeServices, project);
-        await CreateStaticFiles(projectName, includeServices);
+        await CreateStaticFiles(projectName, includeServices, modelsPath!);
         List<PathName> newClassPaths = await CreateFilesAsync(modelsPath, includeServices);
 
         if (withEF)
@@ -61,12 +62,14 @@ public class WriteDirectories
         }
     }
 
-    private async Task CreateStaticFiles(string? projectName, bool withServices)
+    private async Task CreateStaticFiles(string? projectName, bool withServices, string modelsDir)
     {
         if (string.IsNullOrEmpty(projectName))
             throw new ArgumentNullException(nameof(projectName));
+        IEnumerable<string>? modelClasses = await GetModelClassNames(modelsDir)!;
         var tasks = new List<Task>
     {
+        CreateFile("Data", "AppDbContext.cs", path => AppDbContext.CreateBaseDbContext(path, projectName, modelClasses!)),
         CreateFile("Repositories", "Repository.cs", path => BaseRepositoryTemplate.CreateBaseRepository(path, "AppDbContext", projectName)),
         CreateFile("Services", "Service.cs", path => BaseServiceTemplate.CreateBaseService(path, projectName)),
         CreateFile("Controllers", "Controller", path => BaseControllerTemplate.CreateBaseController(path, withServices ? "IServices" : "IRepository", projectName))
@@ -78,8 +81,6 @@ public class WriteDirectories
             return _writer.WriteToFile(path, createTemplate(path));
         }
     }
-
-
 
     public async Task AddAuthMiddlewareAsync(string user, List<ProjectTools> tools)//,  List<string> existingMiddlewareServices
     {
@@ -101,7 +102,6 @@ public class WriteDirectories
     {
         throw new NotImplementedException();
     }
-
 
     public async Task CreateDirectoriesAsync(bool includeServices, Project project)
     {
@@ -126,7 +126,6 @@ public class WriteDirectories
             }
         }
     }
-
 
     public async Task<List<PathName>> CreateFilesAsync(string? modelsPath, bool includeServices)
     {
