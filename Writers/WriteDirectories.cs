@@ -24,13 +24,12 @@ public class WriteDirectories
     {
         var modelsPath = settings.ModelsPath;
         var dataAccess = settings.DataAccess;
-        var dataLayer = settings.DataLayer;
         var includeServices = settings.IncludeServices;
         var user = settings.User;
         var enableCaching = settings.EnableCaching;
         bool withEF = dataAccess!.StartsWith("EF");
         await CreateDirectoriesAsync(includeServices, project);
-        await CreateStaticFiles(projectName, includeServices, modelsPath!);
+        await CreateStaticFiles(projectName, includeServices);
         List<PathName> newClassPaths = await CreateFilesAsync(modelsPath, includeServices);
 
         if (withEF)
@@ -62,23 +61,28 @@ public class WriteDirectories
         }
     }
 
-    private async Task CreateStaticFiles(string? projectName, bool withServices, string modelsDir)
+    private async Task CreateStaticFiles(string? projectName, bool withServices) //create dbContext in own method
     {
+        List<Template> templates = [];
+        string dataAccess = withServices ? "IService" : "IRepository";
         if (string.IsNullOrEmpty(projectName))
             throw new ArgumentNullException(nameof(projectName));
-        IEnumerable<string>? modelClasses = await GetModelClassNames(modelsDir)!;
-        var tasks = new List<Task>
-    {
-        CreateFile("Data", "AppDbContext.cs", path => AppDbContext.CreateBaseDbContext(path, projectName, modelClasses!)),
-        CreateFile("Repositories", "Repository.cs", path => BaseRepositoryTemplate.CreateBaseRepository(path, "AppDbContext", projectName)),
-        CreateFile("Services", "Service.cs", path => BaseServiceTemplate.CreateBaseService(path, projectName)),
-        CreateFile("Controllers", "Controller", path => BaseControllerTemplate.CreateBaseController(path, withServices ? "IServices" : "IRepository", projectName))
-    };
-        await Task.WhenAll(tasks);
-        Task CreateFile(string folder, string fileName, Func<PathName, string> createTemplate)
+        Template repositoryClass = BaseRepositoryTemplate.CreateBaseRepository(new(projectName, "Repositories", "Repository.cs"), "AppDbContext");
+        templates.Add(repositoryClass);
+        Template repositoryInterface = BaseRepositoryTemplate.CreateBaseIRepository(new(projectName, "Repositories", "IRepository.cs"));
+        templates.Add(repositoryInterface);
+        if (withServices)
         {
-            var path = new PathName(projectName, folder, fileName);
-            return _writer.WriteToFile(path, createTemplate(path));
+            Template serviceInterface = BaseServiceTemplate.CreateBaseIService(new(projectName, "Services", "IService.cs"));
+            Template serviceClass = BaseServiceTemplate.CreateBaseService(new(projectName, "Services", "Service.cs"));
+            templates.Add(serviceClass);
+            templates.Add(serviceInterface);
+        }
+        Template controllerClass = BaseControllerTemplate.CreateBaseController(new(projectName, "Data", "AppDbContext.cs"), dataAccess);
+        templates.Add(controllerClass);
+        foreach (var template in templates)
+        {
+            await _writer.WriteToFile(template);
         }
     }
 
@@ -156,7 +160,7 @@ public class WriteDirectories
         try
         {
             string modelPathType = IOHelpers.GetPathType(modelDirPath!);
-            IEnumerable<string> classNames = Enumerable.Empty<string>();
+            IEnumerable<string> classNames = [];
             List<string> modelClassNames = [];
             if (modelPathType == "file")
             {

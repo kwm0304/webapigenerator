@@ -15,9 +15,6 @@ public class GenerateSettings : CommandSettings
   [CommandOption("-db|--database")]
   public string? Database { get; set; }
 
-  [CommandOption("-dl|--data-layer")]
-  public string? DataLayer { get; set; }
-
   [CommandOption("-s|--services")]
   public bool IncludeServices { get; set; }
 

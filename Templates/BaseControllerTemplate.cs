@@ -9,8 +9,10 @@ public class BaseControllerTemplate
   private readonly static string iActionResult = "Task<IActionResult>";
   private readonly static string catchBlock = "\ncatch (Exception e)\n{\nConsole.WriteLine($\"Error: {e.Message}\");\nreturn BadRequest(e.Message);\n";
   private readonly static string tryStart = "try\n{\n";
-  public static string CreateBaseController(PathName pathName, string dataAccess, string projectName)
+  public static Template CreateBaseController(PathName pathName, string dataAccess)
   {
+    Template template = new();
+    string projectName = pathName.RootDirectoryName;
     string[] args = ["IService<T> service"];
     string dataType = dataAccess == "Service" ? "IService<T>" : "IRepository<T>";
     string dataTypeShort = dataAccess.ToLower();
@@ -37,6 +39,8 @@ public class BaseControllerTemplate
     //delete
     builder.AddMethod(publicAsync, iActionResult, "DeleteByIdAsync", ["HttpDelete(\"{id}\")"], "int id",
     tryStart + $"await {dataTypeUnderscore}.DeleteByIdAsync(id);\nreturn Ok(\"Deleted successfully\");\n}}" + catchBlock);
-    return builder.ToString();
+    template.Code = builder.ToString();
+    template.Path = pathName;
+    return template;
   }
 }

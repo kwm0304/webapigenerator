@@ -1,16 +1,17 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Formatting;
+using webapigenerator.Templates;
 
 namespace webapigenerator;
 
 public class FileWriter
 {
-  public async Task WriteToFile(PathName pathName, string code)
+  public async Task WriteToFile(Template template)
   {
-    pathName.EnsureDirectoryExists();
-    var formatted = FormatCode(code);
-    await File.WriteAllTextAsync(pathName.GetFilePath(), formatted);
+    template.Path.EnsureDirectoryExists();
+    var formatted = FormatCode(template.Code);
+    await File.WriteAllTextAsync(template.Path.GetFilePath(), formatted);
   }
 
   private string FormatCode(string code)
